@@ -35,7 +35,6 @@ function App() {
     return saved || 'easy';
   });
   const [current, setCurrent] = useState(() => generateQuestion(localStorage.getItem(DIFFICULTY_KEY) || 'easy'));
-  const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [questionCount, setQuestionCount] = useState(1);
   const [gameOver, setGameOver] = useState(false);
@@ -46,13 +45,6 @@ function App() {
     return saved ? parseInt(saved, 10) : 0;
   });
   const [showSettings, setShowSettings] = useState(false);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (!inputDisabled && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [current, inputDisabled, gameOver]);
 
   useEffect(() => {
     if (gameOver && score === TOTAL_QUESTIONS) {
@@ -69,9 +61,9 @@ function App() {
     localStorage.setItem(DIFFICULTY_KEY, difficulty);
   }, [difficulty]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (parseInt(userAnswer, 10) === current.answer) {
+  const handleNumberClick = (num) => {
+    if (inputDisabled) return;
+    if (num === current.answer) {
       setScore(score + 1);
       setFeedback('🎉 כל הכבוד! תשובה נכונה!');
       setInputDisabled(true);
@@ -80,7 +72,6 @@ function App() {
           setGameOver(true);
         } else {
           setCurrent(generateQuestion(difficulty));
-          setUserAnswer('');
           setFeedback('');
           setQuestionCount(questionCount + 1);
           setAttempts(0);
@@ -96,7 +87,6 @@ function App() {
             setGameOver(true);
           } else {
             setCurrent(generateQuestion(difficulty));
-            setUserAnswer('');
             setFeedback('');
             setQuestionCount(questionCount + 1);
             setAttempts(0);
@@ -106,7 +96,6 @@ function App() {
       } else {
         setFeedback(`❌ נסה שוב! (${attempts + 1} מתוך ${MAX_ATTEMPTS})`);
         setAttempts(attempts + 1);
-        setUserAnswer('');
       }
     }
   };
@@ -115,7 +104,6 @@ function App() {
     setScore(0);
     setQuestionCount(1);
     setCurrent(generateQuestion(difficulty));
-    setUserAnswer('');
     setFeedback('');
     setGameOver(false);
     setAttempts(0);
@@ -131,7 +119,6 @@ function App() {
     setCurrent(generateQuestion(e.target.value));
     setScore(0);
     setQuestionCount(1);
-    setUserAnswer('');
     setFeedback('');
     setGameOver(false);
     setAttempts(0);
@@ -177,11 +164,8 @@ function App() {
         <div style={{ fontSize: '2.5rem', marginBottom: '0.5em', minHeight: '3rem' }}>
           {'🏆'.repeat(trophies)}
         </div>
+        {feedback && <div className="feedback" style={{marginBottom: '0.5em'}}>{feedback}</div>}
         <h1>משחק חשבון ליובל</h1>
-        <button className="parent-btn" onClick={() => setShowSettings(true)}>
-          <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>⚙️</span>
-          הגדרות הורים
-        </button>
         {gameOver ? (
           <>
             <div className="score final-score" style={{ fontSize: '2rem', margin: '1em 0' }}>
@@ -198,23 +182,25 @@ function App() {
             <div className="question-box">
               <span dir="ltr">{current.question} = ?</span>
             </div>
-            <form className="center-form" onSubmit={handleSubmit}>
-              <input
-                type="number"
-                value={userAnswer}
-                onChange={e => setUserAnswer(e.target.value)}
-                className="answer-input"
-                ref={inputRef}
-                autoFocus
-                disabled={inputDisabled}
-              />
-              <button type="submit" disabled={inputDisabled || userAnswer === ''}>
-                שלח
-              </button>
-            </form>
-            {feedback && <div className="feedback">{feedback}</div>}
+            <div className="number-buttons-grid">
+              {Array.from({ length: 31 }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="number-btn"
+                  onClick={() => handleNumberClick(i)}
+                  disabled={inputDisabled}
+                >
+                  {i}
+                </button>
+              ))}
+            </div>
           </>
         )}
+        <button className="parent-btn bottom-parent-btn" onClick={() => setShowSettings(true)}>
+          <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>⚙️</span>
+          הגדרות הורים
+        </button>
       </header>
     </div>
   );
