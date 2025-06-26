@@ -26,6 +26,7 @@ body, .App, .App-header {
   justify-content: center;
   font-size: calc(12px + 2vmin);
   color: #222;
+  padding: 0.2em 0.2em;
 }
 
 .App-link {
@@ -50,8 +51,8 @@ h1 {
 .question-box {
   background: #fffbe7;
   border-radius: 16px;
-  padding: 1em 2em;
-  margin: 1em 0;
+  padding: 0.2em 0.5em;
+  margin: 0.5em 0 0.3em 0;
   font-size: 2.2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   display: inline-block;
@@ -62,7 +63,7 @@ h1 {
 
 .answer-input {
   font-size: 1.5rem;
-  padding: 0.5em 1em;
+  padding: 0.3em 0.5em;
   border-radius: 8px;
   border: 2px solid #6ee7b7;
   margin-left: 1em;
@@ -85,7 +86,7 @@ input[type=number] {
 
 button {
   font-size: 1.2rem;
-  padding: 0.5em 1.5em;
+  padding: 0.3em 0.7em;
   border-radius: 8px;
   border: none;
   background: #6ee7b7;
@@ -128,25 +129,20 @@ button:disabled {
 }
 
 .parent-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #fffbe7;
-  color: #222;
-  border: 2px solid #6ee7b7;
-  border-radius: 8px;
-  padding: 0.5em 1.2em;
-  font-size: 1.1rem;
-  cursor: pointer;
+  position: static;
+  margin: 1.5em auto 0 auto;
   display: flex;
+  justify-content: center;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.2s, border 0.2s;
-  z-index: 10;
+  min-width: unset;
+  min-height: unset;
 }
-.parent-btn:hover {
-  background: #e0f2fe;
-  border: 2px solid #34d399;
+
+.bottom-parent-btn {
+  position: static;
+  margin: 2em auto 0 auto;
+  display: flex;
+  justify-content: center;
 }
 
 .difficulty-btn {
@@ -173,7 +169,8 @@ button:disabled {
   color: #fff;
   font-weight: bold;
   font-size: 1.7rem;
-  margin-bottom: 1.2em;
+  margin-bottom: 0.5em;
+  margin-top: 0.5em;
 }
 
 .center-form {
@@ -190,10 +187,12 @@ button:disabled {
     font-size: 1.5rem;
     text-align: center;
   }
+  .App-header {
+    padding: 0.1em 0.1em;
+  }
   .question-box {
-    font-size: 1.3rem;
-    padding: 0.7em 0.5em;
-    max-width: 95vw;
+    padding: 0.15em 0.2em;
+    margin: 0.3em 0 0.2em 0;
   }
   .answer-input {
     font-size: 1.1rem;
@@ -204,5 +203,56 @@ button:disabled {
     flex-direction: column;
     gap: 0.7em;
     width: 100%;
+  }
+  .number-btn {
+    padding: 0.38em 0;
+  }
+  .main-score {
+    margin-bottom: 0.3em;
+    margin-top: 0.3em;
+  }
+  .number-buttons-grid {
+    margin: 0.2em auto 0.1em auto;
+    gap: 0.09em;
+  }
+}
+
+.number-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  gap: 0.12em;
+  max-width: 400px;
+  margin: 0.3em auto 0.2em auto;
+}
+
+.number-btn {
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.45em 0;
+  border-radius: 8px;
+  border: 2px solid #6ee7b7;
+  background: #fffbe7;
+  color: #222;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
+.number-btn:active, .number-btn.selected {
+  background: #6ee7b7;
+  border: 2px solid #34d399;
+}
+.number-btn:disabled {
+  background: #e0e0e0;
+  color: #888;
+  cursor: not-allowed;
+}
+@media (max-width: 600px) {
+  .number-buttons-grid {
+    grid-template-columns: repeat(5, 1fr);
+    max-width: 95vw;
+    gap: 0.09em;
+  }
+  .number-btn {
+    font-size: 1.1rem;
+    padding: 0.38em 0;
   }
 }
