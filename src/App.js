@@ -198,7 +198,7 @@ function App() {
             <div className="question-box">
               <span dir="ltr">{current.question} = ?</span>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form className="center-form" onSubmit={handleSubmit}>
               <input
                 type="number"
                 value={userAnswer}
