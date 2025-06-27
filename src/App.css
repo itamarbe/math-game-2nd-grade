@@ -114,6 +114,13 @@ button:disabled {
   display: inline-block;
   min-width: 200px;
   text-align: right;
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  pointer-events: none;
 }
 .feedback:empty {
   display: none;
@@ -180,6 +187,21 @@ button:disabled {
   align-items: center;
   gap: 0.5em;
   margin: 1em 0;
+}
+
+.center-form input[type="number"], .center-form input[type="text"], .center-form button {
+  font-size: 1.2rem;
+  height: 48px;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 0 1em;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.center-form button {
+  margin: 0;
 }
 
 @media (max-width: 600px) {
@@ -267,16 +289,23 @@ button:disabled {
 
 .level-card {
   background: #fffbe7;
-  border-radius: 18px;
+  border-radius: 50%;
   box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-  padding: 0.5em 1em;
-  min-width: 90px;
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  min-height: 70px;
   text-align: center;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: box-shadow 0.2s, background 0.2s, opacity 0.2s;
   border: 2px solid #6ee7b7;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5em 0;
 }
 .level-card.unlocked {
   background: #e0ffe7;
@@ -297,14 +326,13 @@ button:disabled {
   margin-top: 0.1em;
 }
 @media (max-width: 600px) {
-  .levels-stack {
-    gap: 0.7em;
-    margin-top: 1em;
-  }
   .level-card {
-    padding: 0.3em 0.2em;
-    min-width: 60px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
     font-size: 0.95rem;
+    padding: 0;
   }
   .level-title {
     font-size: 0.95rem;
@@ -335,5 +363,44 @@ button:disabled {
   }
   .reward-emoji {
     font-size: 1.7rem;
+  }
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 1em;
+  margin-bottom: 0.5em;
+}
+.header-row h1 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+.header-row .top-reward-btn {
+  margin-bottom: 0;
+  position: static;
+}
+
+.level-stack-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.level-connector {
+  width: 4px;
+  height: 32px;
+  background: #b2f5ea;
+  margin: 0.1em 0 0.1em 0;
+  border-radius: 2px;
+  z-index: 0;
+}
+@media (max-width: 600px) {
+  .level-connector {
+    height: 18px;
+    width: 3px;
   }
 }

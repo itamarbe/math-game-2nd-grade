@@ -126,20 +126,22 @@ function App() {
   const [tempName, setTempName] = useState('');
   const [lang, setLang] = useState(() => localStorage.getItem(LANG_KEY) || 'he');
   const t = TRANSLATIONS[lang];
+  const [manualAnswer, setManualAnswer] = useState('');
 
   const TOTAL_LEVELS = 5;
   const levelCards = [];
-  for (let i = TOTAL_LEVELS; i >= 1; i--) {
+  for (let i = 1; i <= TOTAL_LEVELS; i++) {
     const unlocked = unlockedLevel >= i;
     levelCards.push(
-      <div
-        key={i}
-        className={`level-card${unlocked ? ' unlocked' : ' locked'}`}
-        onClick={() => { if (unlocked) { setCurrentLevel(i); setShowProgress(false); } }}
-        style={{cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5, direction: lang === 'he' ? 'rtl' : 'ltr'}}
-      >
-        <div className="level-title">{t.level(i)}</div>
-        {unlocked && i < unlockedLevel && <div className="level-status">{t.completed}</div>}
+      <div className="level-stack-item" key={i}>
+        <div
+          className={`level-card${unlocked ? ' unlocked' : ' locked'}`}
+          onClick={() => { if (unlocked) { setCurrentLevel(i); setShowProgress(false); } }}
+          style={{cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5, direction: lang === 'he' ? 'rtl' : 'ltr'}}
+        >
+          <div className="level-title">{t.level(i)}</div>
+        </div>
+        {i < TOTAL_LEVELS && <div className="level-connector" />}
       </div>
     );
   }
@@ -275,6 +277,15 @@ function App() {
     localStorage.removeItem(NAME_KEY);
   };
 
+  const handleManualSubmit = (e) => {
+    e.preventDefault();
+    const num = parseInt(manualAnswer, 10);
+    if (!isNaN(num)) {
+      handleNumberClick(num);
+      setManualAnswer('');
+    }
+  };
+
   if (showRewards) {
     return (
       <div className="App" dir="rtl">
@@ -369,11 +380,11 @@ function App() {
     return (
       <div className="App" dir="rtl">
         <header className="App-header">
-          <button className="parent-btn top-reward-btn" onClick={() => setShowRewards(true)} style={{marginBottom: '1em', position: 'absolute', top: 10, left: 10}}>
+          <button className="parent-btn top-reward-btn" onClick={() => setShowRewards(true)} style={{margin: '0 auto 1em auto', display: 'block'}}>
             <span role="img" aria-label="rewards" style={{marginLeft: '0.5em'}}>{t.rewards}</span>
             {t.rewardsPage}
           </button>
-          <h1 style={{marginBottom: '1.5em'}}>{t.hello} {userName}!</h1>
+          <h1 style={{marginBottom: '1.5em', textAlign: 'center'}}>{t.hello} {userName}!</h1>
           <div style={{fontSize: '1.2rem', marginBottom: '1.5em'}}>{t.selectLevel}</div>
           <div className="levels-stack">
             {levelCards}
@@ -404,7 +415,7 @@ function App() {
           </>
         ) : (
           <>
-            <div className="score main-score">{t.score}: {score}</div>
+            {/* <div className="score main-score">{t.score}: {score}</div> */}
             <p>{t.question} {questionCount} מתוך {TOTAL_QUESTIONS}</p>
             <div className="question-box">
               <span dir="ltr">{current.question} = ?</span>
@@ -422,6 +433,20 @@ function App() {
                 </button>
               ))}
             </div>
+            <form className="center-form" onSubmit={handleManualSubmit} style={{marginTop: '0.5em'}}>
+              <input
+                type="number"
+                value={manualAnswer}
+                onChange={e => setManualAnswer(e.target.value)}
+                className="answer-input"
+                placeholder={lang === 'he' ? 'הכנס תשובה ידנית' : 'Enter answer manually'}
+                disabled={inputDisabled}
+                style={{width: '120px'}}
+              />
+              <button type="submit" disabled={inputDisabled || manualAnswer === ''}>
+                {lang === 'he' ? 'שלח' : 'Submit'}
+              </button>
+            </form>
           </>
         )}
         <button className="parent-btn bottom-parent-btn" onClick={() => setShowSettings(true)}>
