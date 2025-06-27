@@ -6,11 +6,73 @@ const TOTAL_QUESTIONS = 5;
 const MAX_ATTEMPTS = 3;
 const TROPHY_KEY = 'math-game-trophies';
 const DIFFICULTY_KEY = 'math-game-difficulty';
+const UNLOCKED_LEVEL_KEY = 'math-game-unlocked-level';
+const REWARDS_KEY = 'math-game-rewards';
+const NAME_KEY = 'math-game-username';
+const ANIMAL_REWARDS = ['🐶', '🐱', '🐰', '🦁', '🦉'];
+const LANG_KEY = 'math-game-lang';
 
 const DIFFICULTY_LEVELS = {
   easy: { label: 'קל', min: 1, max: 10 },
   medium: { label: 'בינוני', min: 1, max: 20 },
   hard: { label: 'קשה', min: 10, max: 50 },
+};
+
+const TRANSLATIONS = {
+  he: {
+    welcome: 'ברוך הבא!',
+    whatIsYourName: 'מה השם שלך?',
+    continue: 'המשך',
+    parentSettings: 'הגדרות הורים',
+    resetName: 'אפס שם משתמש',
+    rewardsPage: 'עמוד פרסים',
+    selectLevel: 'בחר שלב כדי להתחיל לשחק',
+    hello: 'שלום',
+    myRewards: 'הפרסים שלי',
+    resetRewards: 'אפס פרסים',
+    resetLevels: 'אפס התקדמות שלבים',
+    userName: 'שם המשתמש',
+    collectedRewards: 'הפרסים שנאספו',
+    back: 'חזור',
+    backToLevels: 'חזור לבחירת שלב',
+    score: 'ניקוד',
+    question: 'שאלה',
+    finished: 'סיימת! ניקוד סופי',
+    restart: 'התחל מחדש',
+    mainTitle: name => `משחק חשבון ל${name}`,
+    level: i => `שלב ${i}`,
+    completed: '✔️',
+    settings: '⚙️',
+    rewards: '🎁',
+    levels: '⬅️',
+  },
+  en: {
+    welcome: 'Welcome!',
+    whatIsYourName: 'What is your name?',
+    continue: 'Continue',
+    parentSettings: 'Parent Settings',
+    resetName: 'Reset Name',
+    rewardsPage: 'Rewards Page',
+    selectLevel: 'Select a level to start playing',
+    hello: 'Hello',
+    myRewards: 'My Rewards',
+    resetRewards: 'Reset Rewards',
+    resetLevels: 'Reset Level Progress',
+    userName: 'User Name',
+    collectedRewards: 'Collected Rewards',
+    back: 'Back',
+    backToLevels: 'Back to Level Select',
+    score: 'Score',
+    question: 'Question',
+    finished: 'Finished! Final Score',
+    restart: 'Restart',
+    mainTitle: name => `Math Game for ${name}`,
+    level: i => `Level ${i}`,
+    completed: '✔️',
+    settings: '⚙️',
+    rewards: '🎁',
+    levels: '⬅️',
+  }
 };
 
 function getRandomInt(min, max) {
@@ -45,10 +107,56 @@ function App() {
     return saved ? parseInt(saved, 10) : 0;
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [showProgress, setShowProgress] = useState(true);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [unlockedLevel, setUnlockedLevel] = useState(() => {
+    const saved = localStorage.getItem(UNLOCKED_LEVEL_KEY);
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const [showRewards, setShowRewards] = useState(false);
+  const [unlockedRewards, setUnlockedRewards] = useState(() => {
+    const saved = localStorage.getItem(REWARDS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [userName, setUserName] = useState(() => {
+    const saved = localStorage.getItem(NAME_KEY);
+    return saved || '';
+  });
+  const [showNamePrompt, setShowNamePrompt] = useState(!userName);
+  const [tempName, setTempName] = useState('');
+  const [lang, setLang] = useState(() => localStorage.getItem(LANG_KEY) || 'he');
+  const t = TRANSLATIONS[lang];
+
+  const TOTAL_LEVELS = 5;
+  const levelCards = [];
+  for (let i = TOTAL_LEVELS; i >= 1; i--) {
+    const unlocked = unlockedLevel >= i;
+    levelCards.push(
+      <div
+        key={i}
+        className={`level-card${unlocked ? ' unlocked' : ' locked'}`}
+        onClick={() => { if (unlocked) { setCurrentLevel(i); setShowProgress(false); } }}
+        style={{cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5, direction: lang === 'he' ? 'rtl' : 'ltr'}}
+      >
+        <div className="level-title">{t.level(i)}</div>
+        {unlocked && i < unlockedLevel && <div className="level-status">{t.completed}</div>}
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (gameOver && score === TOTAL_QUESTIONS) {
-      setTrophies(t => t + 1);
+      // Unlock reward for this level if not already unlocked
+      if (!unlockedRewards.includes(currentLevel)) {
+        setUnlockedRewards([...unlockedRewards, currentLevel]);
+      }
+      if (currentLevel === unlockedLevel && unlockedLevel < TOTAL_LEVELS) {
+        setUnlockedLevel(unlockedLevel + 1);
+      }
+      setTimeout(() => {
+        setShowRewards(true);
+        setShowProgress(true);
+      }, 1200);
     }
     // eslint-disable-next-line
   }, [gameOver]);
@@ -60,6 +168,25 @@ function App() {
   useEffect(() => {
     localStorage.setItem(DIFFICULTY_KEY, difficulty);
   }, [difficulty]);
+
+  useEffect(() => {
+    localStorage.setItem(UNLOCKED_LEVEL_KEY, unlockedLevel);
+  }, [unlockedLevel]);
+
+  useEffect(() => {
+    localStorage.setItem(REWARDS_KEY, JSON.stringify(unlockedRewards));
+  }, [unlockedRewards]);
+
+  useEffect(() => {
+    if (userName) {
+      localStorage.setItem(NAME_KEY, userName);
+      setShowNamePrompt(false);
+    }
+  }, [userName]);
+
+  useEffect(() => {
+    localStorage.setItem(LANG_KEY, lang);
+  }, [lang]);
 
   const handleNumberClick = (num) => {
     if (inputDisabled) return;
@@ -114,6 +241,15 @@ function App() {
     setTrophies(0);
   };
 
+  const handleResetLevels = () => {
+    setUnlockedLevel(1);
+    setShowProgress(true);
+  };
+
+  const handleResetRewards = () => {
+    setUnlockedRewards([]);
+  };
+
   const handleDifficultyChange = (e) => {
     setDifficulty(e.target.value);
     setCurrent(generateQuestion(e.target.value));
@@ -125,14 +261,86 @@ function App() {
     setInputDisabled(false);
   };
 
+  const handleNameSubmit = (e) => {
+    e.preventDefault();
+    if (tempName.trim()) {
+      setUserName(tempName.trim());
+    }
+  };
+
+  const handleResetName = () => {
+    setUserName('');
+    setShowNamePrompt(true);
+    setTempName('');
+    localStorage.removeItem(NAME_KEY);
+  };
+
+  if (showRewards) {
+    return (
+      <div className="App" dir="rtl">
+        <header className="App-header">
+          <h1 style={{marginBottom: '1.5em'}}>{t.myRewards}</h1>
+          <div className="rewards-list">
+            {ANIMAL_REWARDS.map((emoji, idx) => (
+              <div key={idx} className={`reward-emoji${unlockedRewards.includes(idx + 1) ? ' unlocked' : ''}`}>{emoji}</div>
+            ))}
+          </div>
+          <button className="parent-btn bottom-parent-btn" onClick={() => setShowSettings(true)}>
+            <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>⚙️</span>
+            {t.parentSettings}
+          </button>
+          <button className="parent-btn bottom-parent-btn" onClick={() => setShowRewards(false)} style={{marginTop: '0.5em'}}>
+            <span role="img" aria-label="back" style={{marginLeft: '0.5em'}}>{t.levels}</span>
+            {t.back}
+          </button>
+        </header>
+      </div>
+    );
+  }
+
+  if (showNamePrompt) {
+    return (
+      <div className="App" dir="rtl">
+        <header className="App-header">
+          <h1>{t.welcome}</h1>
+          <form onSubmit={handleNameSubmit} className="center-form" style={{marginTop: '2em'}}>
+            <label style={{fontSize: '1.2rem', marginBottom: '1em'}}>{t.whatIsYourName}</label>
+            <input
+              type="text"
+              value={tempName}
+              onChange={e => setTempName(e.target.value)}
+              className="answer-input"
+              style={{width: '180px', marginBottom: '1em'}}
+              autoFocus
+            />
+            <button type="submit" disabled={!tempName.trim()}>
+              {t.continue}
+            </button>
+          </form>
+        </header>
+      </div>
+    );
+  }
+
   if (showSettings) {
     return (
       <div className="App" dir="rtl">
         <header className="App-header">
-          <h1>הגדרות הורים</h1>
-          <div style={{ fontSize: '2.5rem', margin: '1em 0' }}>מספר גביעים נוכחי: {'🏆'.repeat(trophies)}</div>
-          <button className="restart-btn" onClick={handleResetTrophies} style={{marginBottom: '2em'}}>
-            אפס גביעים
+          <h1>{t.parentSettings}</h1>
+          <div style={{margin: '1em 0'}}>
+            <button className={`difficulty-btn${lang === 'he' ? ' selected' : ''}`} onClick={() => setLang('he')}>עברית</button>
+            <button className={`difficulty-btn${lang === 'en' ? ' selected' : ''}`} onClick={() => setLang('en')}>English</button>
+          </div>
+          <div style={{ fontSize: '1.2rem', margin: '1em 0' }}>{t.userName}: <b>{userName}</b></div>
+          <button className="restart-btn" onClick={handleResetName} style={{marginBottom: '1em'}}>
+            {t.resetName}
+          </button>
+          <div style={{ fontSize: '2.5rem', margin: '1em 0' }}>{t.collectedRewards}: {unlockedRewards.map(idx => ANIMAL_REWARDS[idx-1]).join(' ')}</div>
+          <button className="restart-btn" onClick={handleResetRewards} style={{marginBottom: '1em'}}>
+            {t.resetRewards}
+          </button>
+          <button className="restart-btn" onClick={handleResetLevels} style={{marginBottom: '2em'}}>
+            {t.resetLevels}
           </button>
           <div style={{margin: '2em 0'}}>
             <label style={{fontSize: '1.2rem', marginLeft: '1em'}}>רמת קושי:</label>
@@ -150,7 +358,29 @@ function App() {
             </div>
           </div>
           <button onClick={() => setShowSettings(false)}>
-            חזור למשחק
+            {t.back}
+          </button>
+        </header>
+      </div>
+    );
+  }
+
+  if (showProgress) {
+    return (
+      <div className="App" dir="rtl">
+        <header className="App-header">
+          <button className="parent-btn top-reward-btn" onClick={() => setShowRewards(true)} style={{marginBottom: '1em', position: 'absolute', top: 10, left: 10}}>
+            <span role="img" aria-label="rewards" style={{marginLeft: '0.5em'}}>{t.rewards}</span>
+            {t.rewardsPage}
+          </button>
+          <h1 style={{marginBottom: '1.5em'}}>{t.hello} {userName}!</h1>
+          <div style={{fontSize: '1.2rem', marginBottom: '1.5em'}}>{t.selectLevel}</div>
+          <div className="levels-stack">
+            {levelCards}
+          </div>
+          <button className="parent-btn bottom-parent-btn" onClick={() => setShowSettings(true)}>
+            <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>{t.settings}</span>
+            {t.parentSettings}
           </button>
         </header>
       </div>
@@ -161,24 +391,21 @@ function App() {
     <div className="App" dir="rtl">
       <header className="App-header">
         {gameOver && <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={400} />}
-        <div style={{ fontSize: '2.5rem', marginBottom: '0.5em', minHeight: '3rem' }}>
-          {'🏆'.repeat(trophies)}
-        </div>
         {feedback && <div className="feedback" style={{marginBottom: '0.5em'}}>{feedback}</div>}
-        <h1>משחק חשבון ליובל</h1>
+        <h1>{t.mainTitle(userName)}</h1>
         {gameOver ? (
           <>
             <div className="score final-score" style={{ fontSize: '2rem', margin: '1em 0' }}>
-              סיימת! ניקוד סופי: {score} מתוך {TOTAL_QUESTIONS}
+              {t.finished}: {score} מתוך {TOTAL_QUESTIONS}
             </div>
             <button className="restart-btn" onClick={handleRestart}>
-              התחל מחדש
+              {t.restart}
             </button>
           </>
         ) : (
           <>
-            <div className="score main-score">ניקוד: {score}</div>
-            <p>שאלה {questionCount} מתוך {TOTAL_QUESTIONS}</p>
+            <div className="score main-score">{t.score}: {score}</div>
+            <p>{t.question} {questionCount} מתוך {TOTAL_QUESTIONS}</p>
             <div className="question-box">
               <span dir="ltr">{current.question} = ?</span>
             </div>
@@ -198,8 +425,16 @@ function App() {
           </>
         )}
         <button className="parent-btn bottom-parent-btn" onClick={() => setShowSettings(true)}>
-          <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>⚙️</span>
-          הגדרות הורים
+          <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>{t.settings}</span>
+          {t.parentSettings}
+        </button>
+        <button className="parent-btn bottom-parent-btn" onClick={() => setShowProgress(true)} style={{marginTop: '0.5em'}}>
+          <span role="img" aria-label="levels" style={{marginLeft: '0.5em'}}>{t.levels}</span>
+          {t.backToLevels}
+        </button>
+        <button className="parent-btn top-reward-btn" onClick={() => setShowRewards(true)} style={{marginBottom: '1em', position: 'absolute', top: 10, left: 10}}>
+          <span role="img" aria-label="rewards" style={{marginLeft: '0.5em'}}>{t.rewards}</span>
+          {t.rewardsPage}
         </button>
       </header>
     </div>
