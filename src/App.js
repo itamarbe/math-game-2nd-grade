@@ -79,14 +79,26 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateQuestion(difficulty) {
-  const { min, max } = DIFFICULTY_LEVELS[difficulty];
-  const op = Math.random() > 0.5 ? '+' : '-';
+function generateQuestion(difficulty, level = 1) {
+  // Level-based difficulty, only addition and subtraction
+  let min = 1, max = 10, ops = ['+'];
+  if (level === 2) {
+    min = 1; max = 15; ops = ['+', '-'];
+  } else if (level === 3) {
+    min = 5; max = 20; ops = ['+', '-'];
+  } else if (level === 4) {
+    min = 10; max = 30; ops = ['+', '-'];
+  } else if (level >= 5) {
+    min = 15; max = 50; ops = ['+', '-'];
+  }
+  const op = ops[Math.floor(Math.random() * ops.length)];
   let a = getRandomInt(min, max);
   let b = getRandomInt(min, max);
   if (op === '-' && b > a) [a, b] = [b, a]; // ensure a >= b for subtraction
-  const question = `${a} ${op === '+' ? '+' : '-'} ${b}`;
-  const answer = op === '+' ? a + b : a - b;
+  const question = `${a} ${op} ${b}`;
+  let answer;
+  if (op === '+') answer = a + b;
+  else answer = a - b;
   return { question, answer, op };
 }
 
@@ -124,9 +136,27 @@ function App() {
   });
   const [showNamePrompt, setShowNamePrompt] = useState(!userName);
   const [tempName, setTempName] = useState('');
-  const [lang, setLang] = useState(() => localStorage.getItem(LANG_KEY) || 'he');
+  const getLangFromUrl = () => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    if (urlLang && (urlLang === 'he' || urlLang === 'en')) {
+      return urlLang;
+    }
+    return null;
+  };
+
+  const [lang, setLang] = useState(() => {
+    const urlLang = getLangFromUrl();
+    if (urlLang) {
+      localStorage.setItem(LANG_KEY, urlLang);
+      return urlLang;
+    }
+    return localStorage.getItem(LANG_KEY) || 'he';
+  });
   const t = TRANSLATIONS[lang];
   const [manualAnswer, setManualAnswer] = useState('');
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [lastRewardLevel, setLastRewardLevel] = useState(null);
 
   const TOTAL_LEVELS = 5;
   const levelCards = [];
@@ -136,7 +166,7 @@ function App() {
       <div className="level-stack-item" key={i}>
         <div
           className={`level-card${unlocked ? ' unlocked' : ' locked'}`}
-          onClick={() => { if (unlocked) { setCurrentLevel(i); setShowProgress(false); } }}
+          onClick={() => { if (unlocked) { handleLevelSelect(i); } }}
           style={{cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5, direction: lang === 'he' ? 'rtl' : 'ltr'}}
         >
           <div className="level-title">{t.level(i)}</div>
@@ -156,8 +186,8 @@ function App() {
         setUnlockedLevel(unlockedLevel + 1);
       }
       setTimeout(() => {
-        setShowRewards(true);
-        setShowProgress(true);
+        setLastRewardLevel(currentLevel);
+        setShowRewardModal(true);
       }, 1200);
     }
     // eslint-disable-next-line
@@ -200,7 +230,7 @@ function App() {
         if (questionCount >= TOTAL_QUESTIONS) {
           setGameOver(true);
         } else {
-          setCurrent(generateQuestion(difficulty));
+          setCurrent(generateQuestion(difficulty, currentLevel));
           setFeedback('');
           setQuestionCount(questionCount + 1);
           setAttempts(0);
@@ -215,7 +245,7 @@ function App() {
           if (questionCount >= TOTAL_QUESTIONS) {
             setGameOver(true);
           } else {
-            setCurrent(generateQuestion(difficulty));
+            setCurrent(generateQuestion(difficulty, currentLevel));
             setFeedback('');
             setQuestionCount(questionCount + 1);
             setAttempts(0);
@@ -232,7 +262,7 @@ function App() {
   const handleRestart = () => {
     setScore(0);
     setQuestionCount(1);
-    setCurrent(generateQuestion(difficulty));
+    setCurrent(generateQuestion(difficulty, currentLevel));
     setFeedback('');
     setGameOver(false);
     setAttempts(0);
@@ -254,7 +284,7 @@ function App() {
 
   const handleDifficultyChange = (e) => {
     setDifficulty(e.target.value);
-    setCurrent(generateQuestion(e.target.value));
+    setCurrent(generateQuestion(e.target.value, currentLevel));
     setScore(0);
     setQuestionCount(1);
     setFeedback('');
@@ -285,6 +315,52 @@ function App() {
       setManualAnswer('');
     }
   };
+
+  const handleLevelSelect = (level) => {
+    setCurrentLevel(level);
+    setShowProgress(false);
+    setScore(0);
+    setQuestionCount(1);
+    setCurrent(generateQuestion(difficulty, level));
+    setFeedback('');
+    setGameOver(false);
+    setAttempts(0);
+    setInputDisabled(false);
+    setManualAnswer('');
+  };
+
+  const handleNextLevel = () => {
+    if (currentLevel < unlockedLevel) {
+      handleLevelSelect(currentLevel + 1);
+      setShowRewardModal(false);
+    }
+  };
+
+  const handleCloseRewardModal = () => {
+    setShowRewardModal(false);
+    setShowProgress(true);
+  };
+
+  if (showRewardModal && lastRewardLevel) {
+    return (
+      <div className="App" dir="rtl">
+        <header className="App-header">
+          <div className="reward-modal">
+            <div style={{fontSize: '1.5rem', marginBottom: '1.5em'}}>{lang === 'he' ? 'כל הכבוד! קיבלת פרס:' : 'Well done! You got a reward:'}</div>
+            <div style={{fontSize: '2.5rem', marginBottom: '1em'}}>{ANIMAL_REWARDS[lastRewardLevel-1]}</div>
+            {currentLevel < unlockedLevel && (
+              <button className="parent-btn" onClick={handleNextLevel} style={{marginBottom: '1em'}}>
+                {lang === 'he' ? `לשלב הבא (${currentLevel+1})` : `Next Level (${currentLevel+1})`}
+              </button>
+            )}
+            <button className="parent-btn" onClick={handleCloseRewardModal}>
+              {lang === 'he' ? 'חזור לבחירת שלב' : 'Back to Level Select'}
+            </button>
+          </div>
+        </header>
+      </div>
+    );
+  }
 
   if (showRewards) {
     return (
