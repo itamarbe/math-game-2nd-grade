@@ -456,18 +456,19 @@ function App() {
     return (
       <div className="App" dir="rtl">
         <header className="App-header">
-          <button className="parent-btn top-reward-btn" onClick={() => setShowRewards(true)} style={{margin: '0 auto 1em auto', display: 'block'}}>
-            <span role="img" aria-label="rewards" style={{marginLeft: '0.5em'}}>{t.rewards}</span>
-            {t.rewardsPage}
-          </button>
           <h1 style={{marginBottom: '1.5em', textAlign: 'center'}}>{t.hello} {userName}!</h1>
           <div style={{fontSize: '1.2rem', marginBottom: '1.5em'}}>{t.selectLevel}</div>
           <div className="levels-stack">
             {levelCards}
           </div>
+          <div style={{height: '2.5em'}} />
           <button className="parent-btn bottom-parent-btn" onClick={() => setShowSettings(true)}>
             <span role="img" aria-label="settings" style={{marginLeft: '0.5em'}}>{t.settings}</span>
             {t.parentSettings}
+          </button>
+          <button className="parent-btn bottom-parent-btn" onClick={() => setShowRewards(true)} style={{marginTop: '0.5em'}}>
+            <span role="img" aria-label="rewards" style={{marginLeft: '0.5em'}}>{t.rewards}</span>
+            {t.rewardsPage}
           </button>
         </header>
       </div>
@@ -533,7 +534,7 @@ function App() {
           <span role="img" aria-label="levels" style={{marginLeft: '0.5em'}}>{t.levels}</span>
           {t.backToLevels}
         </button>
-        <button className="parent-btn top-reward-btn" onClick={() => setShowRewards(true)} style={{marginBottom: '1em', position: 'absolute', top: 10, left: 10}}>
+        <button className="parent-btn bottom-parent-btn" onClick={() => setShowRewards(true)} style={{marginTop: '0.5em'}}>
           <span role="img" aria-label="rewards" style={{marginLeft: '0.5em'}}>{t.rewards}</span>
           {t.rewardsPage}
         </button>
